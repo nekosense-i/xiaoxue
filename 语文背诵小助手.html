@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>语文背诵小助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container" id="app">
+        <!-- 头部导航栏 -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="logo-title" id="btn-logo">语文背诵小助手</h1>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="btn-seals-view" title="集印册">集印册</button>
+                <div class="header-heatmap-wrapper">
+                    <button class="icon-btn" id="btn-heatmap-toggle" title="复习热力日历">复习热力</button>
+                    <div class="heatmap-popover hidden" id="home-heatmap-body">
+                        <div class="heatmap-body">
+                            <div class="heatmap-grid-container" id="home-heatmap-grid"></div>
+                            <div class="heatmap-footer">
+                                <span>少</span>
+                                <div class="heatmap-legend">
+                                    <span class="heatmap-cell level-0"></span>
+                                    <span class="heatmap-cell level-1"></span>
+                                    <span class="heatmap-cell level-2"></span>
+                                    <span class="heatmap-cell level-3"></span>
+                                </div>
+                                <span>多</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="icon-btn" id="btn-sync-view" title="云同步房间设置">
+                    <span class="sync-status-indicator" id="sync-indicator"></span>
+                    ☁️ <span id="current-room-text">未加房</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区域（SPA 各个面板） -->
+        <main class="app-main">
+            
+            <!-- 1. 首页书架视图 -->
+            <section id="view-home" class="view active">
+                <!-- 今日复习提示条 -->
+                <div id="review-banner" class="review-banner hidden">
+                    <div class="banner-content">
+                        <span class="banner-icon">📅</span>
+                        <span class="banner-text">今天需要复习 <strong id="review-count">0</strong> 篇内容</span>
+                    </div>
+                    <button class="banner-btn" id="btn-start-review">一键过完</button>
+                </div>
+
+                <!-- 搜索与筛选控制区 -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="搜索标题/作者/内容...">
+                    </div>
+                    <div class="filter-controls" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <select id="type-select" style="display: none;">
+                            <option value="all">全部文体</option>
+                            <option value="poetry">古诗词</option>
+                            <option value="modern_poetry">近现代诗歌</option>
+                            <option value="classical_prose">古文</option>
+                            <option value="text">课文</option>
+                            <option value="idiom">成语</option>
+                            <option value="quote">名言名句</option>
+                        </select>
+                        <div class="custom-select-wrapper" id="custom-type-wrapper">
+                            <div class="custom-select-trigger" id="custom-type-trigger">
+                                <span>全部文体</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                            <div class="custom-select-dropdown hidden" id="custom-type-dropdown">
+                                <div class="custom-option" data-value="all">全部文体</div>
+                                <div class="custom-option" data-value="poetry">古诗词</div>
+                                <div class="custom-option" data-value="modern_poetry">近现代诗歌</div>
+                                <div class="custom-option" data-value="classical_prose">古文</div>
+                                <div class="custom-option" data-value="text">课文</div>
+                                <div class="custom-option" data-value="idiom">成语</div>
+                                <div class="custom-option" data-value="quote">名言名句</div>
+                            </div>
+                        </div>
+                        <select id="category-select" style="display: none;">
+                            <option value="all">全部学段</option>
+                            <option value="uncategorized">未分学段</option>
+                            <option value="stage_primary">小学阶段全部</option>
+                            <option value="stage_junior">初中阶段全部</option>
+                            <option value="stage_senior">高中阶段全部</option>
+                            <optgroup label="小学">
+                                <option value="g_1_1">一年级上</option>
+                                <option value="g_1_2">一年级下</option>
+                                <option value="g_2_1">二年级上</option>
+                                <option value="g_2_2">二年级下</option>
+                                <option value="g_3_1">三年级上</option>
+                                <option value="g_3_2">三年级下</option>
+                                <option value="g_4_1">四年级上</option>
+                                <option value="g_4_2">四年级下</option>
+                                <option value="g_5_1">五年级上</option>
+                                <option value="g_5_2">五年级下</option>
+                                <option value="g_6_1">六年级上</option>
+                                <option value="g_6_2">六年级下</option>
+                            </optgroup>
+                            <optgroup label="初中">
+                                <option value="g_7_1">七年级上</option>
+                                <option value="g_7_2">七年级下</option>
+                                <option value="g_8_1">八年级上</option>
+                                <option value="g_8_2">八年级下</option>
+                                <option value="g_9_1">九年级上</option>
+                                <option value="g_9_2">九年级下</option>
+                            </optgroup>
+                            <optgroup label="高中">
+                                <option value="g_10_1">高一上</option>
+                                <option value="g_10_2">高一下</option>
+                                <option value="g_11_1">高二上</option>
+                                <option value="g_11_2">高二下</option>
+                                <option value="g_12_1">高三上</option>
+                                <option value="g_12_2">高三下</option>
+                            </optgroup>
+                        </select>
+                        <div class="custom-select-wrapper" id="custom-category-wrapper">
+                            <div class="custom-select-trigger" id="custom-category-trigger">
+                                <span>全部学段</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                            <div class="custom-select-dropdown hidden dropdown-right" id="custom-category-dropdown">
+                                <div class="custom-option" data-value="all">全部学段</div>
+                                <div class="custom-option" data-value="uncategorized">未分学段</div>
+                                
+                                <div class="custom-group-accordion">
+                                    <div class="custom-group-header" data-group="primary">
+                                        <span class="group-arrow">▶</span>
+                                        <span class="group-title">小学阶段</span>
+                                        <span class="group-btn-all" data-value="stage_primary">选择全部</span>
+                                    </div>
+                                    <div class="custom-group-options hidden" id="group-options-primary">
+                                        <div class="custom-option" data-value="g_1_1">一年级上</div>
+                                        <div class="custom-option" data-value="g_1_2">一年级下</div>
+                                        <div class="custom-option" data-value="g_2_1">二年级上</div>
+                                        <div class="custom-option" data-value="g_2_2">二年级下</div>
+                                        <div class="custom-option" data-value="g_3_1">三年级上</div>
+                                        <div class="custom-option" data-value="g_3_2">三年级下</div>
+                                        <div class="custom-option" data-value="g_4_1">四年级上</div>
+                                        <div class="custom-option" data-value="g_4_2">四年级下</div>
+                                        <div class="custom-option" data-value="g_5_1">五年级上</div>
+                                        <div class="custom-option" data-value="g_5_2">五年级下</div>
+                                        <div class="custom-option" data-value="g_6_1">六年级上</div>
+                                        <div class="custom-option" data-value="g_6_2">六年级下</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="custom-group-accordion">
+                                    <div class="custom-group-header" data-group="junior">
+                                        <span class="group-arrow">▶</span>
+                                        <span class="group-title">初中阶段</span>
+                                        <span class="group-btn-all" data-value="stage_junior">选择全部</span>
+                                    </div>
+                                    <div class="custom-group-options hidden" id="group-options-junior">
+                                        <div class="custom-option" data-value="g_7_1">七年级上</div>
+                                        <div class="custom-option" data-value="g_7_2">七年级下</div>
+                                        <div class="custom-option" data-value="g_8_1">八年级上</div>
+                                        <div class="custom-option" data-value="g_8_2">八年级下</div>
+                                        <div class="custom-option" data-value="g_9_1">九年级上</div>
+                                        <div class="custom-option" data-value="g_9_2">九年级下</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="custom-group-accordion">
+                                    <div class="custom-group-header" data-group="senior">
+                                        <span class="group-arrow">▶</span>
+                                        <span class="group-title">高中阶段</span>
+                                        <span class="group-btn-all" data-value="stage_senior">选择全部</span>
+                                    </div>
+                                    <div class="custom-group-options hidden" id="group-options-senior">
+                                        <div class="custom-option" data-value="g_10_1">高一上</div>
+                                        <div class="custom-option" data-value="g_10_2">高一下</div>
+                                        <div class="custom-option" data-value="g_11_1">高二上</div>
+                                        <div class="custom-option" data-value="g_11_2">高二下</div>
+                                        <div class="custom-option" data-value="g_12_1">高三上</div>
+                                        <div class="custom-option" data-value="g_12_2">高三下</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容书架（卡片网格） -->
+                <div class="shelf-container">
+                    <div class="shelf-grid" id="shelf-items">
+                        <!-- 动态渲染卡片 -->
+                    </div>
+                    <!-- 空书架占位 -->
+                    <div id="shelf-empty" class="shelf-empty hidden">
+                        <div class="empty-icon">📖</div>
+                        <p>书架上空空如也</p>
+                        <p class="empty-sub">请在下方导入一些需要背诵的语文内容吧</p>
+                        <button class="btn btn-primary" id="btn-to-import-empty">去导入内容</button>
+                    </div>
+                </div>
+
+                <!-- 底部操作悬浮栏 -->
+                <div class="floating-actions">
+                    <button class="btn btn-primary btn-round" id="btn-to-import">
+                        ➕ 导入内容
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. 导入视图 -->
+            <section id="view-import" class="view">
+                <div class="view-header">
+                    <button class="back-btn" id="btn-import-back">⬅ 返回书架</button>
+                    <h2 id="import-view-title">导入内容</h2>
+                </div>
+
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-tab="tab-text">宽容文本模板</button>
+                    <button class="tab-btn" data-tab="tab-form">可视化单篇录入</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- 标签页A：宽容文本 -->
+                    <div id="tab-text" class="tab-pane active">
+                        <div class="import-two-col">
+                            <div class="import-left-col">
+                                <div class="form-group">
+                                    <textarea id="import-textarea" placeholder="请在这里粘贴或输入需要导入的内容文本..."></textarea>
+                                </div>
+                            </div>
+                            <div class="import-right-col">
+                                <div class="instruction-box">
+                                    <h4>📋 宽容文本模板格式说明：</h4>
+                                    <p>支持多篇一并导入，格式非常简单，<strong>每篇必须提供配图地址</strong>：</p>
+                                    <pre class="template-demo">
+=== 古诗词
+标题：元日
+作者：王安石
+配图：https://images.unsplash.com/photo-1607604276583-eef5d076aa5f
+正文：
+爆竹/声中/一岁/除，春风/送暖/入/屠苏。
+
+=== 成语
+标题：语文成语
+配图：https://images.unsplash.com/photo-1541701494587-cb58502866ab
+正文：
+掩耳盗铃 = 自己欺骗自己
+                                    </pre>
+                                    <p class="tip-text">💡 提示：在文本类正文中，您可以使用正斜杠 <code>/</code> 明确标识划分词组/意群，系统会以此做挖空和背诵拼装。如果不加，系统会自动做最简单的两字切分。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-secondary" id="btn-load-demo">填入示例数据</button>
+                            <button class="btn btn-primary" id="btn-submit-import-text">开始导入</button>
+                        </div>
+                    </div>
+
+                    <!-- 标签页B：表单录入 -->
+                    <div id="tab-form" class="tab-pane">
+                        <form id="import-single-form" class="visual-form" onsubmit="return false;">
+                            <div class="form-row">
+                                <label for="form-type">内容大类 <span class="required">*</span></label>
+                                <select id="form-type" required>
+                                    <option value="poetry">古诗词</option>
+                                    <option value="modern_poetry">近现代诗歌</option>
+                                    <option value="classical_prose">古文</option>
+                                    <option value="text">课文</option>
+                                    <option value="idiom">成语</option>
+                                    <option value="quote">名言名句</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label for="form-category">所属学段/分组 <span class="required">*</span></label>
+                                <select id="form-category" required>
+                                    <option value="uncategorized">-- 不指定学段/未分组 --</option>
+                                    <optgroup label="小学">
+                                        <option value="g_1_1">一年级上</option>
+                                        <option value="g_1_2">一年级下</option>
+                                        <option value="g_2_1">二年级上</option>
+                                        <option value="g_2_2">二年级下</option>
+                                        <option value="g_3_1">三年级上</option>
+                                        <option value="g_3_2">三年级下</option>
+                                        <option value="g_4_1">四年级上</option>
+                                        <option value="g_4_2">四年级下</option>
+                                        <option value="g_5_1">五年级上</option>
+                                        <option value="g_5_2">五年级下</option>
+                                        <option value="g_6_1">六年级上</option>
+                                        <option value="g_6_2">六年级下</option>
+                                    </optgroup>
+                                    <optgroup label="初中">
+                                        <option value="g_7_1">七年级上</option>
+                                        <option value="g_7_2">七年级下</option>
+                                        <option value="g_8_1">八年级上</option>
+                                        <option value="g_8_2">八年级下</option>
+                                        <option value="g_9_1">九年级上</option>
+                                        <option value="g_9_2">九年级下</option>
+                                    </optgroup>
+                                    <optgroup label="高中">
+                                        <option value="g_10_1">高一上</option>
+                                        <option value="g_10_2">高一下</option>
+                                        <option value="g_11_1">高二上</option>
+                                        <option value="g_11_2">高二下</option>
+                                        <option value="g_12_1">高三上</option>
+                                        <option value="g_12_2">高三下</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label for="form-title">标题 <span class="required">*</span></label>
+                                <input type="text" id="form-title" placeholder="如：静夜思" required>
+                            </div>
+                            <div class="form-row">
+                                <label for="form-author">作者/出处</label>
+                                <input type="text" id="form-author" placeholder="如：李白 或 《论语》">
+                            </div>
+                            <div class="form-row">
+                                <label for="form-image">必填配图地址 <span class="required">*</span></label>
+                                <input type="text" id="form-image" placeholder="支持网络图片URL或本地相对路径（如 images/1.jpg）" required>
+                                <div id="form-image-preview-box" class="image-preview-box" style="margin-top: 8px; display: none;">
+                                    <p style="font-size: 0.85rem; color: #7a6e60; margin-bottom: 4px;">配图预览：</p>
+                                    <img id="form-image-preview" src="" alt="配图预览" referrerpolicy="no-referrer" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px dashed #c39b75; object-fit: contain;">
+                                    <p id="form-image-preview-error" style="font-size: 0.8rem; color: #c0392b; margin-top: 4px; display: none;">⚠️ 该图片无法加载，请检查路径是否正确。提示：部分网络图片有防盗链限制，本地图片请使用相对路径且确保图片文件存在。</p>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="form-text">正文/配对项内容 <span class="required">*</span></label>
+                                <textarea id="form-text" placeholder="普通文本直接输入，成语或名言每一行请使用等号分隔。例如：&#10;画蛇添足 = 做多余的事，反有害无益。" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <label for="form-notes">一句话注释</label>
+                                <input type="text" id="form-notes" placeholder="如：描写白荷花的美丽姿态。">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" id="btn-reset-form">重置表单</button>
+                                <button type="submit" class="btn btn-primary" id="btn-submit-import-form">保存单篇</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. 统一背诵闯关视图 (练测结合) -->
+            <section id="view-study" class="view">
+                <div class="study-header-bar" style="margin-bottom: 16px; flex-shrink: 0;">
+                    <!-- 标题栏（包含最左侧返回按钮与居中课文信息） -->
+                    <div class="study-title-row" style="display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 12px; min-height: 40px;">
+                        <button class="back-btn" id="btn-study-back" style="position: absolute; left: 0;">⬅ 返回书架</button>
+                        <div class="study-meta" style="text-align: center; margin-bottom: 0;">
+                            <h3 id="study-title" style="font-size: 1.5rem; display: inline-block;">课文标题</h3>
+                            <p id="study-author" style="display: inline-block; margin-left: 8px;">作者</p>
+                        </div>
+                        <button class="btn-reset-all" id="btn-reset-all" style="position: absolute; right: 0;" title="重置所有关卡，从头再来">🔄</button>
+                    </div>
+
+                    <!-- 顶部的关卡步骤条 -->
+                    <div class="step-bar" id="study-step-bar" style="margin-bottom: 4px;">
+                        <div class="step-node active" data-step="0">复习巩固</div>
+                        <div class="step-line"></div>
+                        <div class="step-node" data-step="1">句子接龙</div>
+                        <div class="step-line"></div>
+                        <div class="step-node" data-step="2">排序挑战</div>
+                        <div class="step-line"></div>
+                        <div class="step-node" data-step="3">补充全文①</div>
+                        <div class="step-line"></div>
+                        <div class="step-node" data-step="4">补充全文②</div>
+                    </div>
+                </div>
+
+                <div class="study-container" id="study-main-layout">
+                    <!-- 左侧：配图大区（视觉中心，无遮罩） -->
+                    <div class="study-image-wrapper">
+                        <img id="study-image" src="" alt="背诵配图" referrerpolicy="no-referrer">
+                    </div>
+
+                    <!-- 右侧：交互控制区 -->
+                    <div class="study-interactive-wrapper">
+                        <!-- 核心玩法控制面板 -->
+                        <div class="study-play-card">
+                            <!-- 实时答题成绩与正确率看板 -->
+                            <div class="study-accuracy-bar hidden" id="study-accuracy-bar">
+                                <div class="accuracy-pill accuracy-correct">
+                                    <span class="pill-icon">🟢</span>
+                                    <span class="pill-label">答对</span>
+                                    <strong id="accuracy-correct-count">0</strong>
+                                </div>
+                                <div class="accuracy-pill accuracy-wrong">
+                                    <span class="pill-icon">🔴</span>
+                                    <span class="pill-label">答错</span>
+                                    <strong id="accuracy-wrong-count">0</strong>
+                                </div>
+                                <div class="accuracy-pill accuracy-rate">
+                                    <span class="pill-icon">🎯</span>
+                                    <span class="pill-label">正确率</span>
+                                    <strong id="accuracy-rate-value">100%</strong>
+                                </div>
+                                <div class="accuracy-pill accuracy-combo hidden" id="accuracy-combo-pill">连对 ×0</div>
+                                <button class="accuracy-pill accuracy-back-step" id="btn-back-step" title="返回上一关">
+                                    <span class="pill-icon">⬅</span>
+                                    <span class="pill-label">上一关</span>
+                                </button>
+                            </div>
+                            
+                            <!-- 步骤 0：看一眼面板 -->
+                            <div id="panel-step-0" class="study-sub-panel active">
+                                <div class="text-display-area" id="look-text-container"></div>
+                                <div class="notes-display-area" id="look-notes-container"></div>
+                                <div class="practice-actions">
+                                    <button class="btn btn-primary btn-wide" id="btn-start-level">🎯 开始闯关</button>
+                                </div>
+                            </div>
+
+                            <!-- 步骤 1：第一关（上下句接龙单选） -->
+                            <div id="panel-step-1" class="study-sub-panel">
+                                <div class="practice-main-area">
+                                    <p class="test-instruction">第一关：上下句接龙，请选择正确的后半句：</p>
+                                    <div id="practice-text-container"></div>
+                                </div>
+                            </div>
+
+                            <!-- 步骤 2：第二关（闪卡碎片拼全文） -->
+                            <div id="panel-step-2" class="study-sub-panel">
+                                <div class="practice-main-area" id="recite-text-playarea">
+                                    <p class="test-instruction">第二关：请看着插图并默默背诵，<strong>依次点击</strong>下方的词组拼出全文：</p>
+                                    <!-- 上方：大面积的虚线提示框（字隐，仅留标点） -->
+                                    <div class="recite-slots-container" id="slots-container-step3"></div>
+                                    <!-- 下方：打乱的意群词组碎片池 -->
+                                    <div class="recite-fragments-container" id="fragments-container-step3"></div>
+                                </div>
+                            </div>
+
+                            <!-- 步骤 3：第三关（刮刮乐盲背与清单特异模式） -->
+                            <div id="panel-step-3" class="study-sub-panel">
+                                <!-- A. 普通文本类：智能手写镂空默写 -->
+                                <div class="practice-main-area" id="recite-scratch-playarea">
+                                    <div class="scratch-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                                        <p class="test-instruction" id="scratch-step-instruction" style="margin: 0;">补充全文①：根据前一句，填写下一句</p>
+                                         <div class="scratch-options" style="display: flex; align-items: center; gap: 12px;">
+                                             <label class="toggle-hint-wrapper hidden" style="display: none; align-items: center; cursor: pointer; font-size: 0.85rem; color: var(--text-sub);">
+                                                 <input type="checkbox" id="toggle-hint-switch" style="margin-right: 4px;" checked>
+                                                 首字提示
+                                             </label>
+                                             <div class="input-mode-toggle" style="display: flex; gap: 6px;">
+                                                 <button class="btn btn-secondary btn-sm active" id="btn-input-keyboard" style="padding: 4px 8px; font-size: 0.8rem;">⌨️ 键盘打字</button>
+                                                 <button class="btn btn-secondary btn-sm" id="btn-input-speech" style="padding: 4px 8px; font-size: 0.8rem;">🎤 语音背诵</button>
+                                             </div>
+                                         </div>
+                                    </div>
+                                    <!-- 手写输入默写面板 -->
+                                    <div class="scratch-container" id="scratch-container-step3"></div>
+                                    <!-- 编辑距离高亮纠错反馈面板，固定高度防 CLS 抖动 -->
+                                    <div id="diff-feedback-box" class="diff-feedback-box" style="margin-top: 12px; padding: 10px; border-radius: var(--radius-sm); background-color: var(--primary-light); min-height: 48px; border: 1px solid var(--border-color); display: none;"></div>
+                                    <!-- 自评反馈按钮 -->
+                                    <div class="scratch-evaluation-bar hidden" id="scratch-eval-bar">
+                                        <button class="btn btn-secondary btn-eval" id="btn-eval-wrong">🔴 没记准</button>
+                                        <button class="btn btn-primary btn-eval" id="btn-eval-correct">🟢 背对了</button>
+                                    </div>
+                                </div>
+
+                                <!-- B. 清单类连线题（双击点击配对，移除手绘 Canvas） -->
+                                <div class="practice-main-area hidden" id="recite-pair-playarea">
+                                    <p class="test-instruction">第一关：请点击左右两侧匹配的词句与释义：</p>
+                                    <div id="practice-pair-container">
+                                        <div class="pair-column" id="pair-col-left"></div>
+                                        <div class="pair-column" id="pair-col-right"></div>
+                                    </div>
+                                </div>
+
+                                <!-- C. 清单类终极测试（猜释义选择题） -->
+                                <div class="practice-main-area hidden" id="recite-quiz-playarea">
+                                    <p class="test-instruction">第二关：请选择当前成语/名句的正确含义：</p>
+                                    <div class="quiz-question-box">
+                                        <h4 id="quiz-question-text">成语</h4>
+                                    </div>
+                                    <div class="quiz-options-grid" id="quiz-options-container">
+                                        <!-- 选项按钮 -->
+                                    </div>
+                                </div>
+
+                                <!-- 复习模式下额外的“退回练习”辅助 -->
+                                <div class="practice-actions" id="recite-actions-bar">
+                                    <button class="btn btn-secondary hidden" id="btn-test-back-to-practice">💡 需要热身练习</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 集印册视图 -->
+            <section id="view-seals" class="view">
+                <div class="view-header">
+                    <button class="back-btn" id="btn-seals-back">⬅ 返回书架</button>
+                    <h2>集印册</h2>
+                </div>
+
+                <div class="seals-overview">
+                    <div class="seals-stat-card title-card">
+                        <span class="stat-label">当前称号</span>
+                        <strong id="seals-title-name">蒙童</strong>
+                    </div>
+                    <div class="seals-stat-card">
+                        <span class="stat-label">点数余额</span>
+                        <strong id="seals-points-balance">0</strong>
+                    </div>
+                    <div class="seals-stat-card">
+                        <span class="stat-label">历史最高连对</span>
+                        <strong id="seals-max-combo">0</strong>
+                    </div>
+                </div>
+
+                <div class="title-progress-panel" id="title-progress-panel">
+                    <div class="title-progress-row">
+                        <span id="title-progress-text">晋级分 0 / 10</span>
+                        <span id="title-progress-next">距书童还需 10 分</span>
+                    </div>
+                    <div class="title-progress-track">
+                        <div class="title-progress-fill" id="title-progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="seals-grid" id="seals-grid"></div>
+            </section>
+
+            <!-- 4. 云同步设置视图 -->
+            <section id="view-sync" class="view">
+                <div class="view-header">
+                    <button class="back-btn" id="btn-sync-back">⬅ 返回书架</button>
+                    <h2>云同步设置</h2>
+                </div>
+
+                <div class="sync-panel-card">
+                    <div class="sync-room-info">
+                        <h3>🔑 房间号云同步</h3>
+                        <p>多设备输入相同的房间号，即可共享内容书架与背诵进度。数据保存在云端分组中。</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sync-room-input">输入房间号：</label>
+                        <input type="text" id="sync-room-input" placeholder="例如：room302 或者 任意数字/字母组合">
+                    </div>
+
+                    <div class="sync-actions">
+                        <button class="btn btn-primary" id="btn-apply-room">加入此房间</button>
+                        <button class="btn btn-secondary" id="btn-leave-room">断开云同步 (单机运行)</button>
+                    </div>
+
+
+                    <!-- 管理者登录/退出模块 -->
+                    <div class="admin-mode-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color); text-align: center;">
+                        <button class="btn btn-secondary" id="btn-toggle-admin-mode" style="width: 100%;">🔒 进入管理者模式</button>
+                    </div>
+
+                    <!-- 管理员专属：房间快捷管理面板 -->
+                    <div class="admin-rooms-panel hidden" id="admin-rooms-panel" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color); text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">📋 房间快捷管理簿</h3>
+                            <button class="btn btn-secondary btn-sm" id="btn-admin-add-room" style="padding: 4px 8px; font-size: 0.8rem;">➕ 新增房间</button>
+                        </div>
+                        <ul id="admin-rooms-list" style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto;">
+                            <!-- 动态装载房间列表项 -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- 粒子特效 Canvas，完全本地绘制，全屏覆盖 -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- 自定义 Toast 提示容器 -->
+    <div id="custom-toast" class="custom-toast hidden"></div>
+
+    <!-- 自定义 Modal 确认框容器 -->
+    <div id="custom-modal" class="custom-modal-overlay hidden">
+        <div class="custom-modal-box">
+            <p class="custom-modal-message" id="custom-modal-message">确认提示内容</p>
+            <div class="custom-modal-actions">
+                <button class="btn btn-secondary btn-sm" id="btn-modal-cancel">取消</button>
+                <button class="btn btn-primary btn-sm" id="btn-modal-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 集印册详情卡 -->
+    <div id="seal-detail-modal" class="seal-detail-overlay hidden">
+        <div class="seal-detail-card">
+            <button class="seal-detail-close" id="btn-seal-detail-close">×</button>
+            <div id="seal-detail-stamp" class="seal-stamp seal-stamp-unlocked"></div>
+            <h3 id="seal-detail-name">成就名</h3>
+            <p id="seal-detail-note">出处释义</p>
+            <p id="seal-detail-date">解锁日期</p>
+            <p id="seal-detail-item">触发课文</p>
+        </div>
+    </div>
+
+    <!-- 依次引入各模块 -->
+    <script src="js/parser.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/import.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/study.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
