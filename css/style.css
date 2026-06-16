@@ -1,3 +1,4 @@
+
 /* 
    语文背诵小助手 - 温暖低压力设计系统
    色彩哲学：使用护眼且温馨的暖米色、莫兰迪茶色、原木色，摒弃冷淡深色或荒眼的强对比色。
@@ -3789,4 +3790,58 @@ body {
 .card-seal-shuxin svg {
     width: 42px;
     height: 42px;
+}
+
+/* =======================================================
+   移动端触控与响应式加固
+   ======================================================= */
+.recite-word-chip,
+.quiz-option-btn,
+.pair-node,
+.step-node {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 500px) {
+    .app-container {
+        padding: 8px !important;
+    }
+
+    .scratch-pair-board {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .recite-word-chip {
+        padding: 10px 14px !important;
+        font-size: 1.1rem !important;
+        margin: 6px !important;
+    }
+
+    .heatmap-popover,
+    .header-heatmap-wrapper .heatmap-popover {
+        position: fixed !important;
+        top: 60px !important;
+        left: 5% !important;
+        right: 5% !important;
+        width: 90% !important;
+        min-width: 0 !important;
+        max-width: 90% !important;
+        transform: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #confetti-canvas {
+        display: none !important;
+    }
+
+    .amber-shake,
+    .error-shake {
+        animation: none !important;
+        transition: none !important;
+    }
 }
