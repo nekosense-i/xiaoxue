@@ -333,6 +333,7 @@ class StudyController {
         this.recognition = null;
         this.isListening = false;
         this.recordedText = '';
+        this.shouldStopListening = false;
 
         // 长文本分段成员变量
         this.currentChunkIndex = 0;
@@ -366,6 +367,8 @@ class StudyController {
         // 刮刮乐手写相关状态
         this.scratchActiveIndex = 0; 
         this.step3SentenceStatus = {}; // { index: 'correct' | 'wrong' }
+        this.currentScratchPairs = null;
+        this.currentScratchPairsStep = null;
         this.step4ScratchActiveIndex = 0;
         this.step4SentenceStatus = {}; // { index: 'correct' | 'wrong' }
         this.step4ScratchWrongIndices = [];
@@ -400,6 +403,7 @@ class StudyController {
             if (this.inputMode === newMode) return;
             
             if (this.isListening && this.recognition) {
+                this.shouldStopListening = true;
                 this.recognition.stop();
             }
             
@@ -762,6 +766,7 @@ class StudyController {
 
         // 强行停止残留录音
         if (this.isListening && this.recognition) {
+            this.shouldStopListening = true;
             this.recognition.stop();
         }
 
@@ -1010,6 +1015,8 @@ class StudyController {
         const parsedSentences = window.parseTextToSentences(chunk.text);
         this.currentSentences = parsedSentences.sentences.map(s => s.replace(/\//g, ''));
         this.currentSentencePuncs = parsedSentences.punctuations;
+        this.currentScratchPairs = null;
+        this.currentScratchPairsStep = null;
 
         // 动态解析当前分段的数据源 (包含清单类的 pairData 和普通课文的 step2Sentences)
         this.parseData();
@@ -1168,15 +1175,18 @@ class StudyController {
             if (nodes[4]) nodes[4].style.display = 'none';
             if (lines[3]) lines[3].style.display = 'none';
         } else {
+            const isSingleSentence = this.currentSentences && this.currentSentences.length <= 1;
             nodes[1].textContent = '句子接龙';
             nodes[2].style.display = 'block'; 
             lines[1].style.display = 'block';
-            nodes[3].textContent = '补充全文①';
+            nodes[3].textContent = isSingleSentence ? '补充全文' : '补充全文①';
             if (nodes[4]) {
                 nodes[4].textContent = '补充全文②';
-                nodes[4].style.display = 'block';
+                nodes[4].style.display = isSingleSentence ? 'none' : 'block';
             }
-            if (lines[3]) lines[3].style.display = 'block';
+            if (lines[3]) {
+                lines[3].style.display = isSingleSentence ? 'none' : 'block';
+            }
         }
 
         nodes.forEach((node) => {
@@ -1439,7 +1449,7 @@ class StudyController {
         const grid = document.createElement('div');
         grid.className = 'quiz-options-grid';
         grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = '1fr';
+        grid.style.gridTemplateColumns = window.innerWidth > 768 ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr';
         grid.style.gap = '12px';
 
         options.forEach(opt => {
@@ -1574,7 +1584,11 @@ class StudyController {
                     slot.style.borderBottom = '2px dashed #cfc5b4';
                     slot.style.margin = isProse ? '0 4px' : '0 6px';
                     if (!isProse) {
-                        slot.style.minWidth = `${frag.length * 1.3}rem`;
+                        if (window.innerWidth < 500) {
+                            slot.style.minWidth = 'auto';
+                        } else {
+                            slot.style.minWidth = `${frag.length * 1.3}rem`;
+                        }
                     }
                 }
             } else {
@@ -1582,7 +1596,11 @@ class StudyController {
                 slot.style.color = 'transparent'; 
                 slot.style.margin = isProse ? '0 4px' : '0 6px';
                 if (!isProse) {
-                    slot.style.minWidth = `${frag.length * 1.3}rem`;
+                    if (window.innerWidth < 500) {
+                        slot.style.minWidth = 'auto';
+                    } else {
+                        slot.style.minWidth = `${frag.length * 1.3}rem`;
+                    }
                 }
             }
             
@@ -1744,25 +1762,42 @@ class StudyController {
         this.renderScratchInputRound();
     }
 
-    getScratchPairs() {
+    initScratchPairsForCurrentStep() {
+        if (this.currentScratchPairs && this.currentScratchPairsStep === this.currentStep) {
+            return;
+        }
+
         const sentences = (this.currentSentences || []).filter(Boolean);
+        let pairs;
         if (sentences.length <= 1) {
-            return sentences.map((sentence, idx) => ({
+            pairs = sentences.map((sentence, idx) => ({
                 prompt: '请默写全文',
                 answer: sentence,
                 promptIndex: -1,
                 answerIndex: idx
             }));
+        } else {
+            const reverse = this.currentStep === 4;
+            pairs = [];
+            for (let i = 0; i < sentences.length - 1; i++) {
+                pairs.push(reverse
+                    ? { prompt: sentences[i + 1], answer: sentences[i], promptIndex: i + 1, answerIndex: i }
+                    : { prompt: sentences[i], answer: sentences[i + 1], promptIndex: i, answerIndex: i + 1 });
+            }
         }
 
-        const reverse = this.currentStep === 4;
-        const pairs = [];
-        for (let i = 0; i < sentences.length - 1; i++) {
-            pairs.push(reverse
-                ? { prompt: sentences[i + 1], answer: sentences[i], promptIndex: i + 1, answerIndex: i }
-                : { prompt: sentences[i], answer: sentences[i + 1], promptIndex: i, answerIndex: i + 1 });
+        for (let i = pairs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
         }
-        return pairs;
+
+        this.currentScratchPairs = pairs;
+        this.currentScratchPairsStep = this.currentStep;
+    }
+
+    getScratchPairs() {
+        this.initScratchPairsForCurrentStep();
+        return this.currentScratchPairs || [];
     }
 
     getScratchStageState() {
@@ -1881,7 +1916,7 @@ class StudyController {
             
             const performScroll = () => {
                 setTimeout(() => {
-                    inputEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    inputEl.scrollIntoView({ block: 'center', behavior: 'auto' });
                 }, 250);
             };
 
@@ -1946,6 +1981,7 @@ class StudyController {
     handleSpeechButtonClick(speechSlot, frag, idx) {
         if (this.isListening) {
             if (this.recognition) {
+                this.shouldStopListening = true;
                 this.recognition.stop();
             }
         } else {
@@ -1968,6 +2004,7 @@ class StudyController {
             rec.interimResults = true;
             
             rec.onstart = () => {
+                this.shouldStopListening = false;
                 speechSlot.textContent = '正在倾听，请开始背诵...';
                 speechSlot.style.color = 'var(--accent)';
                 this.renderScratchInputRound(); 
@@ -2002,6 +2039,25 @@ class StudyController {
             };
 
             rec.onend = () => {
+                const standardLength = (frag || '').replace(/\s/g, '').length;
+                const recordedLength = (this.recordedText || '').replace(/\s/g, '').length;
+                const isPrematureStop = !this.shouldStopListening && standardLength > 0 && recordedLength < standardLength * 0.5;
+                if (isPrematureStop && this.recognition) {
+                    this.isListening = true;
+                    setTimeout(() => {
+                        try {
+                            if (this.recognition && !this.shouldStopListening) {
+                                this.recognition.start();
+                            }
+                        } catch (e) {
+                            console.warn('语音识别自动续听失败：', e);
+                            this.isListening = false;
+                            this.renderScratchInputRound();
+                        }
+                    }, 120);
+                    return;
+                }
+
                 this.isListening = false;
                 this.renderScratchInputRound();
                 this.verifySpeechInput(this.recordedText, frag, idx);
@@ -2078,6 +2134,11 @@ class StudyController {
 
     handleScratchStageCompleted() {
         if (this.currentStep === 3) {
+            if (this.currentSentences.length <= 1) {
+                this.handleStep3Completed();
+                return;
+            }
+
             showToast('补充全文①完成，进入反向回忆。');
             this.goToStep(4);
             return;
@@ -2477,6 +2538,9 @@ class StudyController {
 
         const optionsContainer = document.getElementById('quiz-options-container');
         optionsContainer.innerHTML = '';
+        optionsContainer.style.display = 'grid';
+        optionsContainer.style.gridTemplateColumns = window.innerWidth > 768 ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr';
+        optionsContainer.style.gap = '12px';
 
         options.forEach(opt => {
             const btn = document.createElement('button');
@@ -2555,6 +2619,7 @@ class StudyController {
 
     destroy() {
         if (this.isListening && this.recognition) {
+            this.shouldStopListening = true;
             this.recognition.stop();
         }
     }
@@ -2623,6 +2688,7 @@ class StudyController {
      */
     resetAllSteps() {
         if (this.isListening && this.recognition) {
+            this.shouldStopListening = true;
             this.recognition.stop();
         }
 
@@ -2642,6 +2708,8 @@ class StudyController {
 
         this.scratchActiveIndex = 0;
         this.step3SentenceStatus = {};
+        this.currentScratchPairs = null;
+        this.currentScratchPairsStep = null;
         this.scratchWrongIndices = [];
         this.isReviewingWrongSentences = false;
         this.wrongSentenceQueue = [];
