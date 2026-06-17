@@ -1,3 +1,4 @@
+
 /**
    语文背诵小助手 - 导入解析与校验模块 (js/import.js)
 */
@@ -266,6 +267,7 @@ function initImportView(domElements, callbacks) {
         importTextarea, btnResetForm, btnSubmitImportForm,
         formType, formTitle, formAuthor, formImage, formText, formNotes
     } = domElements;
+    const importSingleForm = document.getElementById('import-single-form');
 
     // 图片实时预览逻辑
     const previewBox = document.getElementById('form-image-preview-box');
@@ -445,10 +447,11 @@ function initImportView(domElements, callbacks) {
         exitEditMode();
     });
 
-    // 5. 提交可视化表单
-    btnSubmitImportForm.addEventListener('click', (e) => {
-        e.preventDefault();
-        
+    function submitSingleForm(e) {
+        if (e) {
+            e.preventDefault();
+        }
+
         const type = formType.value;
         const categoryVal = formCategory ? formCategory.value : 'uncategorized';
         const category = categoryVal === 'uncategorized' ? null : categoryVal;
@@ -483,7 +486,15 @@ function initImportView(domElements, callbacks) {
         callbacks.onImportSuccess([currentItem]);
         exitEditMode();
         alert(`🎉 成功保存内容：【${title}】！`);
-    });
+    }
+
+    // 5. 提交可视化表单
+    if (btnSubmitImportForm) {
+        btnSubmitImportForm.addEventListener('click', submitSingleForm);
+    }
+    if (importSingleForm) {
+        importSingleForm.addEventListener('submit', submitSingleForm);
+    }
 
     return {
         fillEditForm,
