@@ -1,3 +1,4 @@
+
 /**
    语文背诵小助手 - 顶级应用程序总调度与路由 (js/app.js)
 */
@@ -51,6 +52,61 @@ window.showConfirm = function(message) {
             cleanup();
             resolve(false);
         };
+    });
+};
+
+window.showPrompt = function(message, defaultValue = '', options = {}) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-prompt');
+        const msgEl = document.getElementById('custom-prompt-message');
+        const inputEl = document.getElementById('custom-prompt-input');
+        const btnConfirm = document.getElementById('btn-prompt-confirm');
+        const btnCancel = document.getElementById('btn-prompt-cancel');
+
+        if (!modal || !msgEl || !inputEl || !btnConfirm || !btnCancel) {
+            resolve(prompt(message, defaultValue));
+            return;
+        }
+
+        msgEl.textContent = message;
+        inputEl.value = defaultValue || '';
+        inputEl.type = options.type === 'password' ? 'password' : 'text';
+        inputEl.placeholder = options.placeholder || '请输入';
+        inputEl.autocapitalize = options.autocapitalize || 'off';
+        inputEl.autocomplete = options.autocomplete || 'off';
+        inputEl.autocorrect = options.autocorrect || 'off';
+        inputEl.spellcheck = false;
+        modal.classList.remove('hidden');
+
+        const cleanup = () => {
+            modal.classList.add('hidden');
+            btnConfirm.onclick = null;
+            btnCancel.onclick = null;
+            inputEl.onkeydown = null;
+        };
+
+        const confirmInput = () => {
+            const value = inputEl.value;
+            cleanup();
+            resolve(value);
+        };
+
+        btnConfirm.onclick = confirmInput;
+        btnCancel.onclick = () => {
+            cleanup();
+            resolve(null);
+        };
+        inputEl.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmInput();
+            }
+        };
+
+        requestAnimationFrame(() => {
+            inputEl.focus();
+            inputEl.select();
+        });
     });
 };
 
@@ -719,7 +775,10 @@ function bindSyncViewEvents() {
                     showToast('🟢 已退出管理员模式，操作按钮已隐蔽。');
                 }
             } else {
-                const pwd = prompt('请输入管理员密码：');
+                const pwd = await showPrompt('请输入管理员密码：', '', {
+                    type: 'password',
+                    placeholder: '请输入管理员密码'
+                });
                 // 注意：此处的明文密码仅作为前端 UI 开关，并不构成真实的网络安全边界
                 if (pwd === 'nekosensei') {
                     window.isAdminMode = true;
@@ -738,8 +797,10 @@ function bindSyncViewEvents() {
     // 绑定管理员新增房间按钮
     const adminAddRoomBtn = document.getElementById('btn-admin-add-room');
     if (adminAddRoomBtn) {
-        adminAddRoomBtn.onclick = () => {
-            const newRoom = prompt('➕ 请输入要新增的管理房间号：');
+        adminAddRoomBtn.onclick = async () => {
+            const newRoom = await showPrompt('➕ 请输入要新增的管理房间号：', '', {
+                placeholder: '例如：room302'
+            });
             if (newRoom && newRoom.trim()) {
                 addAdminRoom(newRoom.trim());
             }
@@ -898,9 +959,11 @@ function renderAdminRoomsList() {
             DOM.btnApplyRoom.click();
         };
         
-        li.querySelector('.btn-room-edit').onclick = (e) => {
+        li.querySelector('.btn-room-edit').onclick = async (e) => {
             e.stopPropagation();
-            const newName = prompt(`✏️ 请输入房间【${roomName}】的新名字：`, roomName);
+            const newName = await showPrompt(`✏️ 请输入房间【${roomName}】的新名字：`, roomName, {
+                placeholder: '请输入新的房间名'
+            });
             if (newName && newName.trim() && newName.trim() !== roomName) {
                 const targetName = newName.trim();
                 const roomsList = getAdminRooms();
