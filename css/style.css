@@ -2515,6 +2515,33 @@ body {
     flex: 1;
 }
 
+.custom-prompt-box {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.custom-prompt-box .custom-modal-message {
+    margin-bottom: 0;
+}
+
+.custom-prompt-input {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: #fffdf9;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 12px 14px;
+    outline: none;
+}
+
+.custom-prompt-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(195, 155, 117, 0.18);
+}
+
 /* 状态标签分级：巩固中 */
 .card-status.consolidating {
     background-color: #f7ecd8;
@@ -3806,8 +3833,122 @@ body {
 }
 
 @media (max-width: 500px) {
+    body {
+        align-items: stretch;
+        min-height: 100dvh;
+        overflow: hidden;
+    }
+
     .app-container {
         padding: 8px !important;
+    }
+
+    .app-header {
+        height: auto;
+        padding: 12px 12px 10px;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .logo-title {
+        width: 100%;
+        font-size: 1.05rem;
+        line-height: 1.25;
+        text-align: center;
+    }
+
+    .header-right {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        align-items: stretch;
+        grid-auto-rows: 72px;
+    }
+
+    .header-right > * {
+        min-width: 0;
+    }
+
+    .header-heatmap-wrapper {
+        width: 100%;
+        display: flex;
+    }
+
+    .header-right .icon-btn {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 72px;
+        padding: 8px 10px;
+        border-radius: 18px;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.2;
+        white-space: normal;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        font-size: 0.95rem;
+    }
+
+    #btn-sync-view {
+        gap: 4px;
+        flex-direction: column;
+    }
+
+    #btn-sync-view #current-room-text {
+        display: block;
+        max-width: 100%;
+        font-size: 0.9rem;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sync-status-indicator {
+        flex-shrink: 0;
+    }
+
+    .filter-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        overflow: visible;
+    }
+
+    .filter-bar .search-box,
+    .filter-bar .filter-controls,
+    .filter-bar .custom-select-wrapper {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filter-bar .filter-controls {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .filter-bar .custom-select-trigger,
+    .filter-bar .search-box input {
+        min-height: 48px;
+        font-size: 0.98rem;
+    }
+
+    .admin-mode-section,
+    #admin-rooms-panel {
+        position: relative;
+        z-index: 1;
+    }
+
+    #btn-toggle-admin-mode {
+        min-height: 52px;
     }
 
     .scratch-pair-board {
@@ -3831,6 +3972,21 @@ body {
         min-width: 0 !important;
         max-width: 90% !important;
         transform: none !important;
+    }
+
+    .custom-modal-box {
+        width: min(92vw, 420px);
+        padding: 18px 16px;
+    }
+
+    .custom-modal-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .custom-modal-actions button {
+        flex: 1 1 0;
+        min-height: 44px;
     }
 }
 
